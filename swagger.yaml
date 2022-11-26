@@ -1,0 +1,80 @@
+openapi: 3.0.0
+info:
+  description: T-Learn API documentation.
+  version: 1.0.0
+  title: T-Learn
+tags:
+  - name: cards
+    description: Всё связанное с карточками.
+    
+paths:
+  /cards/study:
+    get:
+      tags: 
+        - cards
+      summary: Возвращает карточки со словами для обучения.
+      parameters: 
+        - in: query
+          name: count
+          required: true
+          description: Количество карточек, которое необходимо вернуть.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Список с заданным количеством карточек.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: 
+                      type: integer
+                      example: 1
+                    word:
+                      type: string
+                      example: "Sofa"
+                    transcription: 
+                      type: string
+                      example: "/ˈsəʊfə/"
+                    type:
+                      type: integer
+                      example: 0
+                    translation:
+                      type: array
+                      items:
+                        type: string
+                        example: "Диван"
+                    state:
+                      type: integer
+                      example: 0
+    post:
+      tags:
+        - cards
+      summary: Принимает ответ от пользователя.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                  type: object
+                  properties:
+                    card_id:
+                      type: integer
+                      example: 1
+                    action:
+                      type: integer
+                      example: 0
+                  required: 
+                    - card_id
+                    - action
+      responses:
+        '200':
+          description: Ответ от пользователя успешно принят.
+          
+          
+
