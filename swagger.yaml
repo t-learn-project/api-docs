@@ -7,6 +7,8 @@ tags:
   - name: cards
     description: Всё связанное с карточками.
     
+servers: []
+    
 paths:
   /cards/study:
     get:
@@ -20,6 +22,8 @@ paths:
           description: Количество карточек, которое необходимо вернуть.
           schema:
             type: integer
+      security:
+        - TLearnAuth: [] 
       responses:
         '200':
           description: Список с заданным количеством карточек.
@@ -50,10 +54,15 @@ paths:
                     state:
                       type: integer
                       example: 0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+          
     post:
       tags:
         - cards
       summary: Принимает ответ от пользователя.
+      security:
+        - TLearnAuth: [] 
       requestBody:
         required: true
         content:
@@ -76,5 +85,18 @@ paths:
         '200':
           description: Ответ от пользователя успешно принят.
           
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+          
+components:
+  securitySchemes:
+    TLearnAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedError:
+      description: Отсутствует AccessToken или он не действителен.
           
 
