@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  description: T-Learn API documentation.
+  description: T-Learn API документация.
   version: 1.0.0
   title: T-Learn
 tags:
