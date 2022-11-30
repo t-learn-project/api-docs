@@ -7,7 +7,9 @@ tags:
   - name: cards
     description: Всё связанное с карточками.
     
-servers: []
+servers: 
+  - url: https://tlearn-app.naloaty.me/api/v1
+    description: Тестовый сервер
     
 paths:
   /cards/study:
