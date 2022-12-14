@@ -18,7 +18,7 @@ jobs:
             uses: burnett01/rsync-deployments@5.2.1
             with:
                 path: ./
-                switches: -avzr --delete --exclude=".git*"
+                switches: -avzr --delete --exclude=".git*" --exclude="*.md"
                 remote_host: ${{ secrets.DOCS_HOST }}
                 remote_user: ${{ secrets.DOCS_USER }}
                 remote_key: ${{ secrets.DOCS_SSH_KEY }}
