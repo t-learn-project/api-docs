@@ -4,14 +4,111 @@ info:
   version: 1.0.0
   title: T-Learn
 tags:
+  - name: auth
+    description: Всё связанное с авторизацией
+    
   - name: cards
     description: Всё связанное с карточками.
+    
+  - name: collections
+    description: Всё связанное с коллекциями карточек.
     
 servers: 
   - url: https://tlearn.naloaty.me/api/v1
     description: Тестовый сервер
     
 paths:
+  /auth/login:
+    post:
+      summary: Начинает процесс авторизации пользователя
+      tags: 
+        - auth     
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: 
+                  type: string
+                  description: Электронная почта пользователя
+              required:
+                - email
+            example:
+              email: "oleg@tinkoff.ru"
+      responses:
+        '200':
+          description: Процесс авторизации успешно начат
+          
+        '400':
+          description: Указанная электронная почта не допустима
+
+  /auth/activate:
+    post:
+      summary: Завершает процесс авторизации пользователя
+      tags: 
+        - auth     
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activationLink: 
+                  type: string
+                  description: Шестизначный код, отправленный на указанную почту 
+              required:
+                - activationLink
+            example:
+              activationLink: "130430"
+      responses:
+        '200':
+          description: Авторизация успешна
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthInfo"
+          
+        '404':
+          description: Указан неверный код активации
+
+  /auth/logout:
+    post:
+      summary: Выходит из системы
+      tags: 
+        - auth     
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshToken"
+      responses:
+        '200':
+          description: Пользователь успшено вышел из системы
+          
+  /auth/refresh:
+    post:
+      summary: Обновляет access и refresh токены
+      tags: 
+        - auth     
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshToken"
+
+      responses:
+        '200':
+          description: Токены успешено обновлены
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthInfo"
+          
   /cards/study:
     get:
       tags: 
@@ -90,6 +187,119 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError'
           
+  /collections/available:
+    get:
+      tags: 
+        - collections
+      summary: Возвращает список всех доступных для обучения коллекций.
+      security:
+        - TLearnAuth: [] 
+      responses:
+        '200':
+          description: Список всех доступных для обучения коллекциий.
+          content:
+            application/json:
+              schema: 
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: 
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "Basic words"
+                    card_count: 
+                      type: integer
+                      example: 30
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+          
+  /collections/active:
+    get:
+      tags: 
+        - collections
+      summary: Возвращает активную коллекцию у пользователя.
+      security:
+        - TLearnAuth: [] 
+      responses:
+        '200':
+          description: Информация об активной коллекции.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  id: 
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: "Basic words"
+                  card_count: 
+                    type: integer
+                    example: 30
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      tags:
+        - collections
+      summary: Устанавливает активную коллекцию у пользователя.
+      security:
+        - TLearnAuth: [] 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collection_id:
+                  type: integer
+                  example: 1
+              required: 
+                - collection_id
+
+      responses:
+        '200':
+          description: Указанная коллекция успешно уставновлена в качестве активной.
+          
+        '404':
+          description: Указанная коллекция не существует
+          
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+      
+  /collections/{coll_id}/reset:
+    post:
+      tags:
+        - collections
+      parameters:
+        - in: path
+          name: coll_id
+          schema:
+            type: integer
+          required: true
+          description: Идентификатор коллекции карточек
+      summary: Сбрасывает прогресс пользователя по коллекции карточек
+      security:
+        - TLearnAuth: [] 
+
+      responses:
+        '200':
+          description: Прогресс по указанной коллекции успешно сброшен.
+          
+        '404':
+          description: Указанная коллекция не существует
+          
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      
+          
 components:
   securitySchemes:
     TLearnAuth:
@@ -100,5 +310,54 @@ components:
   responses:
     UnauthorizedError:
       description: Отсутствует AccessToken или он не действителен.
-          
+      
+  schemas:
+    RefreshToken:
+      type: object
+      properties:
+        refreshToken: 
+          type: string
+          description: Refresh токен
+      required:
+        - refreshToken
+      example:
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        
+    AuthInfo:
+      type: object
+      required:
+        - accessToken       
+        - refreshToken       
+        - user       
+        - email       
+        - id       
+        - isActivated       
+      properties:
+        accessToken:
+          type: string
+          description: Access токен
+        refreshToken:
+          type: string
+          description: Refresh токен
+        user:
+          type: object 
+          description: Авторизованный пользователь
+          properties:
+            email:
+              type: string
+              description: Электронная почта пользователя
+            id:
+              type: integer
+              description: Идентификатор пользователя
+            isActivated:
+              type: boolean
+              description: Статус авториазции (авторизован или нет)
+      example:         
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          email: "oleg@tinkoff.ru"
+          id: 4
+          isActivated: true
+        
 
